@@ -1,115 +1,93 @@
+# Social Media Comment Triage Pipeline
 
-# Intelligent Triage Assistant for Social Media
+A Python-based application for parsing, analyzing, and prioritizing YouTube comments. This project was developed for Datathon 2025.
 
-This project, developed for the ALTEL/TELE2 Hackathon, is an AI-powered tool designed to help social media managers triage and moderate YouTube comment sections efficiently. It transforms chaotic comment feeds into a prioritized, actionable list, allowing teams to address the most critical issues first.
+The system processes comments via a multi-stage pipeline and presents the results in an interactive web-based dashboard or as a CSV report.
 
-The application features a command-line interface for generating CSV reports and a powerful interactive web dashboard for real-time analysis and visualization.
+## System Components
 
-## ✨ Core Features
+The pipeline consists of three main analytical components that process each comment:
 
-Our solution is built on three pillars: **Prioritize, Analyze, and Assist.**
+### 1. Multilingual Sentiment Analysis
+-   **Function:** Classifies comment tonality (Positive, Negative, Neutral) for Russian and Kazakh languages.
+-   **Implementation:** A "Specialist Router" pattern is used. First, the `fastText lid.176` model identifies the language. Then, the comment is routed to a language-specific, fine-tuned transformer model (`sismetanin/rubert-ru-sentiment` for Russian, `issai/rembert-sentiment-analysis-kazakh` for Kazakh) for more accurate classification.
 
-### 1. **Triage Score Prioritization**
-Instead of just classifying comments, our core innovation is the `triage_score`. This score (from 0.0 to 1.0) synthesizes multiple data points (negative sentiment, profanity, spam) into a single, actionable metric of urgency. All outputs are automatically sorted by this score, ensuring moderators always see the most critical comments first.
+### 2. Knowledge-Based Question Answering
+-   **Function:** Provides context-aware answers to user questions based on a provided document set.
+-   **Implementation:** A Retrieval-Augmented Generation (RAG) system was built. Documents are chunked, vectorized using the `intfloat/multilingual-e5-large` embedding model, and stored in a `FAISS` index. The `e5-large` model was selected for its effectiveness in asymmetric search tasks. Retrieval relevance is improved by adding `"query: "` and `"passage: "` prefixes to text before embedding, as required by the model.
 
-### 2. **"Specialist Router" AI Architecture**
-To achieve the highest accuracy for both Russian and Kazakh languages, we rejected a "one-size-fits-all" approach. Our system uses a high-speed language detector to route each comment to a dedicated, fine-tuned sentiment analysis model. This results in faster, more accurate, and culturally aware analysis.
+### 3. Triage Score Calculation
+-   **Function:** Assigns a numerical score from 0.0 to 1.0 to each comment to quantify its urgency for moderation.
+-   **Implementation:** The score is calculated based on a weighted combination of the sentiment analysis output and rule-based flags (e.g., presence of profanity, URL links). The final output is sorted by this score in descending order.
 
-### 3. **RAG-Powered Question Answering**
-For comments identified as questions, the assistant employs a state-of-the-art Retrieval-Augmented Generation (RAG) system (`intfloat/multilingual-e5-large`). It consults a knowledge base of provided company documents to generate factually correct and contextually relevant answers, turning support queries into instantly resolved tickets.
-
-## 🚀 Getting Started
+## Setup and Usage
 
 ### Prerequisites
-*   Python 3.11
-*   A virtual environment is highly recommended.
+-   Python 3.11
+-   Git
 
-### 1. Setup
-
-First, clone the repository and navigate into the project directory.
-
+### 1. Setup Environment
+Clone the repository and set up a Python virtual environment.
 ```bash
 git clone <your-repo-url>
 cd social-moderator-bot
-```
 
-Next, create and activate a virtual environment:
-
-```bash
-# For Windows
-py -3.11 -m venv venv
-.\venv\Scripts\activate
-
-# For macOS/Linux
-python3.11 -m venv venv
-source venv/bin/activate
+# Create and activate venv
+# Windows: py -3.11 -m venv venv && .\venv\Scripts\activate
+# macOS/Linux: python3.11 -m venv venv && source venv/bin/activate
 ```
 
 ### 2. Install Dependencies
-
-Install all required Python packages using the `requirements.txt` file.
-
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Build the Knowledge Base
+### 3. Download Large Model File (Manual Step)
+The main language detection model (`lid.176.bin`, ~125MB) is managed outside of this Git repository.
 
-Before running the main application, you must build the vector knowledge base from the provided documents. This only needs to be done once.
+-   **Download the file:** **[Click here to download lid.176.bin](YOUR_DOWNLOAD_LINK_HERE)**
+-   **Place the file:** Move the downloaded `lid.176.bin` into the `models/` directory.
 
+### 4. Build Knowledge Base
+This one-time command processes the documents in the `data/` folder and creates the `FAISS` vector index required for the RAG component.
 ```bash
 python -m scripts.build_knowledge_base
 ```
-This will create `company_kb.index` and `chunks.json` inside the `models/` directory.
 
-##  Usage
+## Running the Application
 
-The application has two primary modes of operation: an interactive web dashboard (recommended) and a command-line tool for generating CSV reports.
+The application can be run in two modes.
 
-### Option A: Interactive Web Dashboard (Recommended)
-
-This is the best way to visualize and interact with the analysis results.
-
-To launch the dashboard, run the following command from the project root:
-
+### Option A: Interactive Dashboard (Recommended)
+Launches a web-based UI built with Streamlit.
 ```bash
 streamlit run app/dashboard.py
 ```
+A browser tab will open. Enter a YouTube URL to begin analysis.
 
-Your web browser will automatically open a new tab with the application. Simply paste a YouTube URL and click "Analyze Comments".
-
-### Option B: Command-Line CSV Generation
-
-To generate a prioritized CSV report directly, use the `main.py` script.
-
+### Option B: Command-Line Report Generation
+Generates a CSV report in the `reports/` directory.
 ```bash
 python -m app.main --url "YOUR_YOUTUBE_URL_HERE"
 ```
-
-**Example:**
-```bash
-python -m app.main --url "https://www.youtube.com/watch?v=M_Xb8cfRm_w"
-```
-
-The script will process the comments and save a sorted CSV file inside the `reports/` directory.
 
 ## Project Structure
 ```
 social-moderator-bot/
 ├── app/                  # Main application source code
 │   ├── core/
-│   │   └── processor.py  # The core AI "brain" of the application
+│   │   └── processor.py  # Core analysis pipeline logic
 │   ├── parsers/
-│   │   └── youtube_parser.py # Logic for scraping comments
+│   │   └── youtube_parser.py # YouTube comment scraping
 │   ├── utils/
-│   │   └── file_handler.py   # Utility for saving CSV files
-│   ├── dashboard.py      # The Streamlit web application
-│   └── main.py           # The command-line interface entry point
-├── data/                 # Raw data for building the knowledge base
-├── models/               # Pre-trained models and generated knowledge base index
+│   │   └── file_handler.py   # CSV export utility
+│   ├── dashboard.py      # Streamlit UI application
+│   └── main.py           # Command-line entry point
+├── data/                 # Source documents for the RAG knowledge base
+├── models/               # Directory for models and the FAISS index
 ├── reports/              # Output directory for CSV reports
-├── scripts/              # Standalone scripts for tasks like building the KB
+├── scripts/              # Helper scripts
 │   └── build_knowledge_base.py
-└── requirements.txt      # Project dependencies
+├── .gitignore
+└── requirements.txt
 ```
-````
