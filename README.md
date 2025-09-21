@@ -4,6 +4,12 @@ A Python-based application for parsing, analyzing, and prioritizing YouTube comm
 
 The system processes comments via a multi-stage pipeline and presents the results in an interactive web-based dashboard or as a CSV report.
 
+## 📄 Presentation Slides
+
+A full overview of the project's architecture, technical decisions, and results can be found in the presentation slides.
+
+-   **[Click here to view the presentation on Google Drive](https://drive.google.com/file/d/16gof28H3pYPStZtGUvqy9BnHWC7uALcE/view?usp=sharing)**
+
 ## System Components
 
 The pipeline consists of three main analytical components that process each comment:
@@ -45,7 +51,7 @@ pip install -r requirements.txt
 ### 3. Download Large Model File (Manual Step)
 The main language detection model (`lid.176.bin`, ~125MB) is managed outside of this Git repository.
 
--   **Download the file:** **[Click here to download lid.176.bin](https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin)**
+-   **Download the file from the official source:** **[https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin](https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin)**
 -   **Place the file:** Move the downloaded `lid.176.bin` into the `models/` directory.
 
 ### 4. Build Knowledge Base
