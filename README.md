@@ -45,7 +45,7 @@ pip install -r requirements.txt
 ### 3. Download Large Model File (Manual Step)
 The main language detection model (`lid.176.bin`, ~125MB) is managed outside of this Git repository.
 
--   **Download the file:** **[Click here to download lid.176.bin](YOUR_DOWNLOAD_LINK_HERE)**
+-   **Download the file:** **[Click here to download lid.176.bin](https://fasttext.cc/docs/en/language-identification.html)**
 -   **Place the file:** Move the downloaded `lid.176.bin` into the `models/` directory.
 
 ### 4. Build Knowledge Base
